@@ -32,7 +32,7 @@ class Migration(migrations.Migration):
             name='GenreTitle',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('genre', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='rewiews.genre')),
+                ('genre', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='reviews.genre')),
             ],
         ),
         migrations.CreateModel(
@@ -42,13 +42,13 @@ class Migration(migrations.Migration):
                 ('name', models.CharField(help_text='Название', max_length=256)),
                 ('year', models.IntegerField(help_text='Год выпуска')),
                 ('description', models.TextField(help_text='Описание')),
-                ('category', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='titles', to='rewiews.category')),
-                ('genre', models.ManyToManyField(through='rewiews.GenreTitle', to='rewiews.Genre')),
+                ('category', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='titles', to='reviews.category')),
+                ('genre', models.ManyToManyField(through='reviews.GenreTitle', to='reviews.Genre')),
             ],
         ),
         migrations.AddField(
             model_name='genretitle',
             name='title',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='rewiews.title'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='reviews.title'),
         ),
     ]
