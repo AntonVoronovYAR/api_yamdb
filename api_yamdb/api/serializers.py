@@ -1,6 +1,7 @@
 from rest_framework import filters, serializers
 
 from reviews.models import Category, Genre, Title
+from users.models import User
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -28,5 +29,14 @@ class TitleSerializer(serializers.ModelSerializer):
         fields = '__all__'
         model = Title
 
-    def get_rating(self, obj):
-        rating = Re
+    # def get_rating(self, obj):
+    #    rating = Re
+
+
+class UserSerializer(serializers.ModelSerializer):
+    role = serializers.ChoiceField(choices=User.ROLE_CHOICES, required=False)
+
+    class Meta:
+        model = User
+        fields = ('username', 'email', 'first_name',
+                  'last_name', 'bio', 'role',)
