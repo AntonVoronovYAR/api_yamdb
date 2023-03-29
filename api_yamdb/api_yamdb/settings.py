@@ -26,6 +26,7 @@ INSTALLED_APPS = [
     'django_filters',
     'reviews',
     'api',
+    'app',
     'users.apps.UsersConfig',
 
 ]
@@ -89,10 +90,6 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
-
-REST_FRAMEWORK = {
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
-}
 
 # Internationalization
 
