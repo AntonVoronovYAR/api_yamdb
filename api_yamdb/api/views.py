@@ -24,3 +24,5 @@ class TitleViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = TitleSerializer
     filter_backends = (DjangoFilterBackend,)
     filterset_fields = ('category', 'genre', 'name', 'year')
+
+# нужно сделать permissions.py с классами, описывающими возможность редактирования для админа/модера и права доступа
