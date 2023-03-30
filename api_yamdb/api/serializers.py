@@ -1,6 +1,7 @@
 from django.db.models import Avg
 from rest_framework import filters, serializers
 from reviews.models import Category, Genre, Title
+from users.models import User
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -29,5 +30,18 @@ class TitleSerializer(serializers.ModelSerializer):
         model = Title
 
     # def get_rating(self, obj):
+    #    rating = Re
     #     rating = Review.objects.filter(pk=obj.id).aggregate(Avg('score'))
     #     return rating['score']
+
+
+
+
+
+class UserSerializer(serializers.ModelSerializer):
+    role = serializers.ChoiceField(choices=User.ROLE_CHOICES, required=False)
+
+    class Meta:
+        model = User
+        fields = ('username', 'email', 'first_name',
+                  'last_name', 'bio', 'role',)
