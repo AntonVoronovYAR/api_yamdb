@@ -1,5 +1,5 @@
+from django.db.models import Avg
 from rest_framework import filters, serializers
-
 from reviews.models import Category, Genre, Title
 from users.models import User
 
@@ -31,6 +31,11 @@ class TitleSerializer(serializers.ModelSerializer):
 
     # def get_rating(self, obj):
     #    rating = Re
+    #     rating = Review.objects.filter(pk=obj.id).aggregate(Avg('score'))
+    #     return rating['score']
+
+
+
 
 
 class UserSerializer(serializers.ModelSerializer):
