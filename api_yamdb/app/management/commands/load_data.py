@@ -25,7 +25,7 @@ class Command(BaseCommand):
                     category_obj = Category.objects.get(pk=row['category'])
                     del row['category']
                     model.objects.get_or_create(**row, category=category_obj)
-                elif model == Review or Comment:
+                elif model == Review or model == Comment:
                     author_obj = User.objects.get(pk=row['author'])
                     del row['author']
                     model.objects.get_or_create(**row, author=author_obj)
