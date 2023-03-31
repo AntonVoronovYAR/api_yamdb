@@ -9,7 +9,11 @@ class AdminOrReadOnly(permissions.BasePermission):
     def has_permission(self, request, view):
         if request.method in permissions.SAFE_METHODS:
             return True
-        return getattr(request.user, 'is_admin', False)
+        else:
+            if request.user.is_authenticated:
+                if request.user.is_admin:
+                    return True
+
 
 
 class AdminModerAuthorOrReadOnly(permissions.BasePermission):

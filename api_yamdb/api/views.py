@@ -1,15 +1,13 @@
-from rest_framework import viewsets
 from rest_framework.viewsets import ModelViewSet
-from rest_framework.pagination import LimitOffsetPagination
+from django.db.models import Avg
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, viewsets
 from rest_framework.decorators import action
 from rest_framework.pagination import PageNumberPagination
-from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import (IsAuthenticated,
-                                        IsAuthenticatedOrReadOnly)
+                                        IsAuthenticatedOrReadOnly, IsAdminUser)
 from reviews.models import Category, Genre, Title, Review
 from api.serializers import (CategorySerializer, GenreSerializer,
                              TitleSerializer, UserSerializer)
@@ -17,31 +15,44 @@ from users.models import User
 
 from .serializers import (CommentSerializer, ReviewSerializer,
                           UserSerializer)
-
-from .permissions import (AdminOrReadOnly, AdminOrSuperuser, 
+from .permissions import (AdminOrReadOnly, AdminOrSuperuser,
                           AuthorOrAuthenticated, AdminModerAuthorOrReadOnly)
+from .mixins import ListCreateDestroyViewSet
+from .filters import TitleFilter
 
 
-class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
+class CategoryViewSet(ListCreateDestroyViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
-    pagination_class = LimitOffsetPagination
     permission_classes = [AdminOrReadOnly]
 
 
-class GenreViewSet(viewsets.ReadOnlyModelViewSet):
+class GenreViewSet(ListCreateDestroyViewSet):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
-    pagination_class = LimitOffsetPagination
     permission_classes = [AdminOrReadOnly]
 
 
-class TitleViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = Title.objects.all()
+class TitleViewSet(viewsets.ModelViewSet):
+    queryset = Title.objects.annotate(
+        rating=Avg('reviews__score')).order_by('rating')
     serializer_class = TitleSerializer
     filter_backends = (DjangoFilterBackend,)
     filterset_fields = ('category', 'genre', 'name', 'year')
+    filterset_class = TitleFilter
     permission_classes = [AdminOrReadOnly]
+
+    def perform_create(self, serializer):
+        category = get_object_or_404(
+            Category, slug=self.request.data.get('category')
+        )
+        genre = Genre.objects.filter(
+            slug__in=self.request.data.getlist('genre')
+        )
+        serializer.save(category=category, genre=genre)
+
+    def perform_update(self, serializer):
+        self.perform_create(serializer)
 
 
 class UserViewSet(viewsets.ModelViewSet):
