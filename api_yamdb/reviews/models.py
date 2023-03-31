@@ -9,18 +9,24 @@ User = get_user_model()
 
 class Category(models.Model):
     name = models.CharField(max_length=256, help_text='Наименование')
-    slug = models.SlugField(max_length=50, help_text='Тип')
+    slug = models.SlugField(max_length=50, help_text='Тип', unique=True)
 
     def __str__(self):
         return self.name[:MAX_TEXT_LEN]
+
+    class Meta:
+        ordering = ['id']
 
 
 class Genre(models.Model):
     name = models.CharField(max_length=256, help_text='Наименование')
-    slug = models.SlugField(max_length=50, help_text='Тип')
+    slug = models.SlugField(max_length=50, help_text='Тип', unique=True)
 
     def __str__(self):
         return self.name[:MAX_TEXT_LEN]
+
+    class Meta:
+        ordering = ['id']
 
 
 class Title(models.Model):
