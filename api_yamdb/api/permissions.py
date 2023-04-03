@@ -33,7 +33,16 @@ class AdminOrSuperuser(permissions.BasePermission):
     '''
 
     def has_permission(self, request, view):
-        return getattr(request.user, 'is_admin', False)
+        return (
+            request.user.is_admin
+            or request.user.is_staff
+        )
+
+    def has_object_permission(self, request, view, obj):
+        return (
+            request.user.is_admin
+            or request.user.is_staff
+        )
 
 
 class AuthorOrAuthenticated(permissions.BasePermission):
