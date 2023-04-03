@@ -1,13 +1,13 @@
 from rest_framework.viewsets import ModelViewSet
 from django.db.models import Avg
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters, viewsets
+from rest_framework import filters, viewsets, status
 from rest_framework.decorators import action
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import (IsAuthenticated,
-                                        IsAuthenticatedOrReadOnly, IsAdminUser)
+                                        IsAuthenticatedOrReadOnly)
 from reviews.models import Category, Genre, Title, Review
 from api.serializers import (CategorySerializer, GenreSerializer,
                              TitleSerializer, UserSerializer)
@@ -69,27 +69,23 @@ class UserViewSet(viewsets.ModelViewSet):
             methods=('get', 'patch'),
             url_path=r'me',
             permission_classes=(IsAuthenticated,))
-    def me(self, request, format=None):
-        me = self.request.user
-
-        if request.method == 'GET':
-            serializer = UserSerializer(me)
-            return Response(serializer.data)
-
-        data = self.request.data.copy()
-        data.pop('role', None)
-        data['email'] = me.email
-        data['username'] = me.username
-        serializer = UserSerializer(me, data=data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data)
+    def me(self, request):
+        if request.method == 'PATCH':
+            serializer = UserSerializer(
+                request.user, data=request.data, partial=True
+            )
+            serializer.is_valid(raise_exception=True)
+            serializer.save(role=request.user.role)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        serializer = UserSerializer(request.user)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class CommentViewSet(ModelViewSet):
     serializer_class = CommentSerializer
-    permission_classes = [IsAuthenticatedOrReadOnly, AuthorOrAuthenticated | AdminModerAuthorOrReadOnly |
-                          AdminOrReadOnly | AdminOrSuperuser]
+    permission_classes = [IsAuthenticatedOrReadOnly, AuthorOrAuthenticated,
+                          AdminModerAuthorOrReadOnly,
+                          AdminOrReadOnly, AdminOrSuperuser]
 
     def get_queryset(self):
         title_id = self.kwargs.get('title_id')
@@ -110,8 +106,9 @@ class CommentViewSet(ModelViewSet):
 
 class ReviewViewSet(ModelViewSet):
     serializer_class = ReviewSerializer
-    permission_classes = [IsAuthenticatedOrReadOnly, AuthorOrAuthenticated | AdminModerAuthorOrReadOnly |
-                          AdminOrReadOnly | AdminOrSuperuser]
+    permission_classes = [IsAuthenticatedOrReadOnly, AuthorOrAuthenticated,
+                          AdminModerAuthorOrReadOnly,
+                          AdminOrReadOnly, AdminOrSuperuser]
     pagination_class = PageNumberPagination
 
     def get_queryset(self):

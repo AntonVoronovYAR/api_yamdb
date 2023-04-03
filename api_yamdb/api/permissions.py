@@ -15,7 +15,6 @@ class AdminOrReadOnly(permissions.BasePermission):
                     return True
 
 
-
 class AdminModerAuthorOrReadOnly(permissions.BasePermission):
     '''
     Доступ автору, модератору, админу и суперюзеру.

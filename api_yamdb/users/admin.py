@@ -1,5 +1,12 @@
 from django.contrib import admin
-from django.contrib.auth import get_user_model
 
-User = get_user_model()
-admin.site.register(User)
+from .models import User
+
+
+class UserAdmin(admin.ModelAdmin):
+    fields = ('is_superuser', 'username', 'email', 'bio', 'role',
+              'is_active', 'is_staff',)
+    list_display = ('username', 'role', 'is_superuser', 'is_admin')
+
+
+admin.site.register(User, UserAdmin)
