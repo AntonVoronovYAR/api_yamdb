@@ -48,6 +48,15 @@ class UserSerializer(serializers.ModelSerializer):
         return data
 
 
+class NotAdminSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = (
+            'username', 'email', 'first_name',
+            'last_name', 'bio', 'role')
+        read_only_fields = ('role',)
+
+
 class AuthSignUpSerializer(serializers.ModelSerializer):
 
     class Meta:
@@ -58,6 +67,13 @@ class AuthSignUpSerializer(serializers.ModelSerializer):
 class AuthTokenSerializer(serializers.Serializer):
     username = serializers.CharField(max_length=150)
     confirmation_code = serializers.CharField(max_length=50)
+
+    class Meta:
+        model = User
+        fields = (
+            'username',
+            'confirmation_code'
+        )
 
 
 class ReviewSerializer(serializers.ModelSerializer):
