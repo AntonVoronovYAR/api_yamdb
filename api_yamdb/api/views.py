@@ -38,7 +38,6 @@ class TitleViewSet(viewsets.ModelViewSet):
         rating=Avg('reviews__score')).order_by('rating')
     serializer_class = TitleSerializer
     filter_backends = (DjangoFilterBackend,)
-    filterset_fields = ('category', 'genre', 'name', 'year')
     filterset_class = TitleFilter
     permission_classes = [AdminOrReadOnly]
 
