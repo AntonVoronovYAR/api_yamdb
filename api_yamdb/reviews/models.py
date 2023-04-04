@@ -76,35 +76,46 @@ class ParentingModel(models.Model):
         abstract = True
 
 
-class Review(ParentingModel):
-    """Отзывы."""
-
+class Review(models.Model):
+    text = models.TextField()
+    pub_date = models.DateTimeField('Дата публикации', auto_now_add=True)
+    author = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name='reviews')
     title = models.ForeignKey(
-        Title,
-        on_delete=models.CASCADE,
+        Title, on_delete=models.CASCADE,
         related_name='reviews'
     )
-    score = models.IntegerField(
-        validators=[MinValueValidator(1),
-                    MaxValueValidator(10)]
+    score = models.PositiveSmallIntegerField(
+        validators=[
+            MaxValueValidator(10),
+            MinValueValidator(1)
+        ]
     )
 
     class Meta:
-        ordering = ['-id']
-        verbose_name = 'Отзывы'
-        unique_together = ('author', 'title',)
+        constraints = [
+            models.UniqueConstraint(
+                fields=['author', 'title'],
+                name='unique_review')
+        ]
+        ordering = ['pub_date']
+
+    def __str__(self):
+        return f'{self.text}, {self.score}'
+
+    def __repr__(self):
+        return self.text[:100]
 
 
-class Comment(ParentingModel):
-    """Комментарии."""
+class Comment(models.Model):
 
+    author = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name='comments')
     review = models.ForeignKey(
-        Review,
-        on_delete=models.CASCADE,
-        related_name="comments"
-    )
+        Review, on_delete=models.CASCADE, related_name='comments')
+    text = models.TextField()
+    pub_date = models.DateTimeField(
+        'Дата добавления', auto_now_add=True, db_index=True)
 
-    class Meta:
-        ordering = ['-id']
-        verbose_name = 'Комментарии'
-        ordering = ['id', ]
+    def __str__(self):
+        return f'{self.author}, {self.pub_date}: {self.text}'

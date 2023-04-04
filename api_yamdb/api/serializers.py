@@ -1,6 +1,7 @@
 from datetime import date
 
 from rest_framework import filters, serializers
+from rest_framework.relations import SlugRelatedField
 from reviews.models import Category, Comment, Genre, Review, Title
 from users.models import User
 
@@ -84,39 +85,31 @@ class AuthTokenSerializer(serializers.Serializer):
 
 
 class ReviewSerializer(serializers.ModelSerializer):
-    """Сериализатор отзывов"""
-
-    author = serializers.SlugRelatedField(
-        many=False,
-        read_only=True,
-        slug_field='username'
-    )
+    author = SlugRelatedField(slug_field='username', read_only=True)
 
     class Meta:
-        read_only_fields = ('id', 'title', 'pub_date')
         fields = ('id', 'text', 'author', 'score', 'pub_date')
         model = Review
 
-    def validate(self, attrs):
-        is_exist = Review.objects.filter(
-            author=self.context['request'].user,
-            title=self.context['view'].kwargs.get('title_id')).exists()
-        if is_exist and self.context['request'].method == 'POST':
-            raise serializers.ValidationError(
-                'Пользователь уже оставлял отзыв на это произведение')
-        return attrs
+    def validate(self, data):
+        request = self.context['request']
+        title_id = self.context.get('view').kwargs.get('title_id')
+        if request.stream.method == 'POST':
+            if Review.objects.filter(
+                title=title_id,
+                author=request.user
+            ).exists():
+                raise serializers.ValidationError(
+                    'Можно оставить только один отзыв!'
+                )
+        return data
 
 
 class CommentSerializer(serializers.ModelSerializer):
-    """Сериализатор комментариев"""
-
-    author = serializers.SlugRelatedField(
-        many=False,
-        read_only=True,
-        slug_field='username'
+    author = SlugRelatedField(
+        read_only=True, slug_field='username'
     )
 
     class Meta:
-        read_only_fields = ('id', 'review', 'pub_date')
-        fields = ('id', 'text', 'author', 'pub_date')
         model = Comment
+        fields = ('id', 'text', 'author', 'pub_date')
