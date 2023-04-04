@@ -1,5 +1,7 @@
+from datetime import date
+
 from rest_framework import filters, serializers
-from reviews.models import Category, Genre, Title, Comment, Review
+from reviews.models import Category, Comment, Genre, Review, Title
 from users.models import User
 
 
@@ -26,11 +28,16 @@ class GenreSerializer(serializers.ModelSerializer):
 class TitleSerializer(serializers.ModelSerializer):
     category = CategorySerializer(read_only=True)
     genre = GenreSerializer(many=True, read_only=True)
-    rating = serializers.FloatField(read_only=True)
+    rating = serializers.IntegerField(read_only=True)
 
     class Meta:
         fields = '__all__'
         model = Title
+
+    def validate_year(self, value):
+        if value > date.today().year:
+            raise serializers.ValidationError('Проверьте год издания!')
+        return value
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -77,9 +84,8 @@ class AuthTokenSerializer(serializers.Serializer):
 
 
 class ReviewSerializer(serializers.ModelSerializer):
-    """
-    Сериализатор отзывов
-    """
+    """Сериализатор отзывов"""
+
     author = serializers.SlugRelatedField(
         many=False,
         read_only=True,
@@ -102,9 +108,8 @@ class ReviewSerializer(serializers.ModelSerializer):
 
 
 class CommentSerializer(serializers.ModelSerializer):
-    """
-    Сериализатор комментариев
-    """
+    """Сериализатор комментариев"""
+
     author = serializers.SlugRelatedField(
         many=False,
         read_only=True,

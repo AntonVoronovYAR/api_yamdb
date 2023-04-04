@@ -2,9 +2,7 @@ from rest_framework import permissions
 
 
 class AdminOrReadOnly(permissions.BasePermission):
-    '''
-    Доступ на запись админу и суперюзеру, остальным read-only.
-    '''
+    """Доступ на запись админу и суперюзеру, остальным read-only."""
 
     def has_permission(self, request, view):
         if request.method in permissions.SAFE_METHODS:
@@ -16,9 +14,7 @@ class AdminOrReadOnly(permissions.BasePermission):
 
 
 class AdminModerAuthorOrReadOnly(permissions.BasePermission):
-    '''
-    Доступ автору, модератору, админу и суперюзеру.
-    '''
+    """Доступ автору, модератору, админу и суперюзеру"""
 
     def has_object_permission(self, request, view, obj):
         if request.method in permissions.SAFE_METHODS:
@@ -28,9 +24,7 @@ class AdminModerAuthorOrReadOnly(permissions.BasePermission):
 
 
 class AdminOrSuperuser(permissions.BasePermission):
-    '''
-    Доступ админу или суперюзеру.
-    '''
+    """Доступ админу или суперюзеру."""
 
     def has_permission(self, request, view):
         return (
@@ -46,10 +40,11 @@ class AdminOrSuperuser(permissions.BasePermission):
 
 
 class AuthorOrAuthenticated(permissions.BasePermission):
-    '''
-    Право на просмотр аутентифицированным пользователям,
-    и право на запись автору.
-    '''
+    """
+    Право на просмотр аутентифицированным пользователям.
+
+    Право на запись только автору.
+    """
 
     def has_permission(self, request, view):
         return (request.method in permissions.SAFE_METHODS

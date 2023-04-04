@@ -1,6 +1,6 @@
-from django.db import models
 from django.contrib.auth import get_user_model
 from django.core.validators import MaxValueValidator, MinValueValidator
+from django.db import models
 
 MAX_TEXT_LEN: int = 25
 
@@ -8,6 +8,8 @@ User = get_user_model()
 
 
 class Category(models.Model):
+    """Категории."""
+
     name = models.CharField(max_length=256, help_text='Наименование')
     slug = models.SlugField(max_length=50, help_text='Тип', unique=True)
 
@@ -19,6 +21,8 @@ class Category(models.Model):
 
 
 class Genre(models.Model):
+    """Жанры."""
+
     name = models.CharField(max_length=256, help_text='Наименование')
     slug = models.SlugField(max_length=50, help_text='Тип', unique=True)
 
@@ -30,6 +34,8 @@ class Genre(models.Model):
 
 
 class Title(models.Model):
+    """Произведения."""
+
     name = models.CharField(max_length=256, help_text='Название')
     year = models.IntegerField(help_text='Год выпуска')
     description = models.TextField(help_text='Описание', blank=True)
@@ -49,6 +55,8 @@ class Title(models.Model):
 
 
 class GenreTitle(models.Model):
+    """Жанры/Произведения."""
+
     genre = models.ForeignKey(Genre, on_delete=models.CASCADE)
     title = models.ForeignKey(Title, on_delete=models.CASCADE)
 
@@ -70,6 +78,7 @@ class ParentingModel(models.Model):
 
 class Review(ParentingModel):
     """Отзывы."""
+
     title = models.ForeignKey(
         Title,
         on_delete=models.CASCADE,
@@ -88,6 +97,7 @@ class Review(ParentingModel):
 
 class Comment(ParentingModel):
     """Комментарии."""
+
     review = models.ForeignKey(
         Review,
         on_delete=models.CASCADE,

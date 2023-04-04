@@ -1,43 +1,62 @@
 from django.core.mail import EmailMessage
-from rest_framework.viewsets import ModelViewSet
 from django.db.models import Avg
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import permissions, filters, viewsets, status
+from rest_framework import filters, permissions, status, viewsets
 from rest_framework.decorators import action
-from rest_framework.pagination import PageNumberPagination
-from rest_framework.response import Response
-from rest_framework.views import APIView
 from rest_framework.generics import get_object_or_404
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import (IsAuthenticated,
                                         IsAuthenticatedOrReadOnly)
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework.viewsets import ModelViewSet
 from rest_framework_simplejwt.tokens import RefreshToken
-from reviews.models import Category, Genre, Title, Review
-from api.serializers import (CategorySerializer, GenreSerializer,
-                             TitleSerializer, UserSerializer,
-                             AuthSignUpSerializer, AuthTokenSerializer)
-from users.models import User
 
-from .serializers import (CommentSerializer, ReviewSerializer,
-                          UserSerializer, NotAdminSerializer)
-from .permissions import (AdminOrReadOnly, AdminOrSuperuser,
-                          AuthorOrAuthenticated, AdminModerAuthorOrReadOnly)
-from .mixins import ListCreateDestroyViewSet
+from reviews.models import Category, Genre, Review, Title
+from users.models import User
+from api.serializers import (AuthSignUpSerializer, AuthTokenSerializer,
+                             CategorySerializer, GenreSerializer,
+                             TitleSerializer)
 from .filters import TitleFilter
+from .mixins import ListCreateDestroyViewSet
+from .permissions import (AdminModerAuthorOrReadOnly, AdminOrReadOnly,
+                          AdminOrSuperuser, AuthorOrAuthenticated)
+from .serializers import (CommentSerializer, NotAdminSerializer,
+                          ReviewSerializer, UserSerializer)
 
 
 class CategoryViewSet(ListCreateDestroyViewSet):
+    """
+    Разрешенные методы GET, PUT, DELETE.
+
+    Права на изменения только у Админа.
+    """
+
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     permission_classes = [AdminOrReadOnly]
 
 
 class GenreViewSet(ListCreateDestroyViewSet):
+    """
+    Разрешенные методы GET, PUT, DELETE.
+
+    Права на изменения только у Админа.
+    """
+
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
     permission_classes = [AdminOrReadOnly]
 
 
 class TitleViewSet(viewsets.ModelViewSet):
+    """
+    Разрешены все методы.
+
+    Но права на изменения
+    только у Админа.
+    """
+
     queryset = Title.objects.annotate(
         rating=Avg('reviews__score')).order_by('rating')
     serializer_class = TitleSerializer
@@ -93,12 +112,14 @@ class UserViewSet(viewsets.ModelViewSet):
 class APIGetToken(APIView):
     """
     Получение JWT-токена в обмен на username и confirmation code.
+
     Права доступа: Доступно без токена. Пример тела запроса:
     {
         "username": "string",
         "confirmation_code": "string"
     }
     """
+
     def post(self, request):
         serializer = AuthTokenSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -120,14 +141,17 @@ class APIGetToken(APIView):
 
 class APISignup(APIView):
     """
-    Получить код подтверждения на переданный email. Права доступа: Доступно без
-    токена. Использовать имя 'me' в качестве username запрещено. Поля email и
+    Получить код подтверждения на переданный email.
+
+    Права доступа: Доступно без токена.
+    Использовать имя 'me' в качестве username запрещено. Поля email и
     username должны быть уникальными. Пример тела запроса:
     {
         "email": "string",
         "username": "string"
     }
     """
+
     permission_classes = (permissions.AllowAny,)
 
     @staticmethod

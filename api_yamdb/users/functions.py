@@ -7,27 +7,20 @@ from rest_framework_simplejwt.tokens import AccessToken
 
 
 def create_confirmation_code():
-    '''
-    Генерирует код активации и возвращает его.
-    В коде 9 случайных цифр.
-    '''
+    """Генерирует код активации и возвращает его. В коде 9 случайных цифр."""
     numbers = string.digits
     confirmation_code = ''.join(secrets.choice(numbers) for i in range(9))
     return confirmation_code
 
 
 def create_access_token(user):
-    '''
-    Генерирует AccessToken для переданного пользователя.
-    '''
+    """Генерирует AccessToken для переданного пользователя."""
     token = AccessToken.for_user(user)
     return {'token': str(token)}
 
 
 def send_signup_mail(user):
-    '''
-    Отправляет письмо на адрес пользователя с его кодом подтверждения.
-    '''
+    """Отправляет письмо на адрес пользователя с его кодом подтверждения."""
     email = user.email
     confirmation_code = user.confirmation_code
 

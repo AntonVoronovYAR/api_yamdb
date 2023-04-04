@@ -1,7 +1,8 @@
 from csv import DictReader
 
 from django.core.management.base import BaseCommand
-from reviews.models import Category, Genre, GenreTitle, Title, Comment, Review
+
+from reviews.models import Category, Comment, Genre, GenreTitle, Review, Title
 from users.models import User
 
 FILE_DATA_TO_MODEL: dict = {
@@ -18,6 +19,11 @@ FILE_DATA_TO_MODEL: dict = {
 class Command(BaseCommand):
 
     def write_data_to_model(self, file, model):
+        """
+        Запись файла в соответствующую модель.
+
+        В некоторых случаях достаются объекты моделей и записываются в базу
+        """
         with open(f'static/data/{file}', encoding='utf-8') as f:
             rows = DictReader(f)
             for row in rows:
@@ -33,5 +39,10 @@ class Command(BaseCommand):
                     model.objects.get_or_create(**row)
 
     def handle(self, *args, **options):
+        """
+        Инициализируящая функция.
+
+        Запись файла .csv в соответсвующую модель.
+        """
         for file, model in FILE_DATA_TO_MODEL.items():
             self.write_data_to_model(file, model)
