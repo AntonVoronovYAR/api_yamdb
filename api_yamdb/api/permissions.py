@@ -19,8 +19,13 @@ class AdminModerAuthorOrReadOnly(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
         if request.method in permissions.SAFE_METHODS:
             return True
-        user = request.user
-        return (user == obj.author or user.is_moderator)
+        if request.method == 'POST':
+            return request.user.is_authenticated
+        return (request.user.is_authenticated and (
+            request.user == obj.author
+            or request.user.is_moderator
+            or request.user.is_admin
+        ))
 
 
 class AdminOrSuperuser(permissions.BasePermission):
@@ -43,7 +48,7 @@ class AuthorOrAuthenticated(permissions.BasePermission):
     """
     Право на просмотр аутентифицированным пользователям.
 
-    Право на запись только автору.
+    Право на запись автору.
     """
 
     def has_permission(self, request, view):

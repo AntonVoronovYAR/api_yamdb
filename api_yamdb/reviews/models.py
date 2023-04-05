@@ -108,7 +108,6 @@ class Review(models.Model):
 
 
 class Comment(models.Model):
-
     author = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name='comments')
     review = models.ForeignKey(
@@ -116,6 +115,9 @@ class Comment(models.Model):
     text = models.TextField()
     pub_date = models.DateTimeField(
         'Дата добавления', auto_now_add=True, db_index=True)
+
+    class Meta:
+        ordering = ['pub_date']
 
     def __str__(self):
         return f'{self.author}, {self.pub_date}: {self.text}'

@@ -85,6 +85,7 @@ class UserViewSet(viewsets.ModelViewSet):
     filter_backends = (filters.OrderingFilter, filters.SearchFilter,)
     ordering = ['username']
     search_fields = ['username']
+    http_method_names = ['get', 'patch', 'post', 'delete']
 
     @action(detail=False,
             methods=('get', 'patch'),
@@ -181,7 +182,7 @@ class APISignup(APIView):
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
-    permission_classes = [AdminModerAuthorOrReadOnly]
+    permission_classes = [IsAuthenticatedOrReadOnly, AdminModerAuthorOrReadOnly]
     pagination_class = PageNumberPagination
     filter_backends = [filters.SearchFilter]
     serializer_class = ReviewSerializer
@@ -198,7 +199,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
 class CommentViewSet(ReviewViewSet):
     serializer_class = CommentSerializer
-    permission_classes = [AuthorOrAuthenticated]
+    permission_classes = [IsAuthenticatedOrReadOnly, AdminModerAuthorOrReadOnly]
 
     def review_query(self):
         return get_object_or_404(Review, id=self.kwargs.get('review_id'))

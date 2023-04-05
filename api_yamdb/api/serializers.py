@@ -1,7 +1,9 @@
 from datetime import date
 
-from rest_framework import filters, serializers
+from rest_framework import filters, serializers, status
 from rest_framework.relations import SlugRelatedField
+from rest_framework.response import Response
+
 from reviews.models import Category, Comment, Genre, Review, Title
 from users.models import User
 
