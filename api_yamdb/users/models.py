@@ -1,8 +1,6 @@
 from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError
 from django.db import models
-from django.db.models import UniqueConstraint
-from django.utils.translation import gettext_lazy as _
 
 
 def validate_not_me(value):
@@ -39,23 +37,13 @@ class User(AbstractUser):
         default='user'
     )
     username = models.CharField(
-        _('username'),
+        'username',
         max_length=150,
         unique=True,
-        help_text=_(
-            'Required. 150 characters, fewer. Letters, digits and @/./+/-/_.'),
+        help_text='150 characters, fewer. Letters, digits and @/./+/-/_.',
         validators=[AbstractUser.username_validator, validate_not_me],
-        error_messages={
-            'unique': _("A user with that username already exists."),
-        },
     )
-    email = models.EmailField(_('email address'), blank=False, unique=True)
-
-    class Meta:
-        constraints = [UniqueConstraint(
-            fields=['username', 'email'],
-            name='unique_username_email',
-        )]
+    email = models.EmailField('email address', blank=False, unique=True)
 
     @property
     def is_admin(self):

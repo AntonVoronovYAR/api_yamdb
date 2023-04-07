@@ -1,5 +1,7 @@
-from api.views import (APIGetToken, APISignup, CategoryViewSet, GenreViewSet,
-                       TitleViewSet, UserViewSet, ReviewViewSet, CommentViewSet)
+from api.views import (
+    APIGetToken, APISignup, CategoryViewSet, GenreViewSet,
+    TitleViewSet, UserViewSet, ReviewViewSet, CommentViewSet
+)
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
@@ -12,7 +14,8 @@ router.register('users', UserViewSet),
 router.register(
     r'titles/(?P<title_id>\d+)/reviews',
     ReviewViewSet,
-    basename='reviews')
+    basename='reviews'
+)
 router.register(
     r'titles/(?P<title_id>\d+)/reviews/(?P<review_id>\d+)/comments',
     CommentViewSet,

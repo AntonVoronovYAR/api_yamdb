@@ -1,7 +1,7 @@
 from django.core.mail import EmailMessage
 from django.db.models import Avg
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters, permissions, status, viewsets
+from rest_framework import filters, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
 from rest_framework.pagination import PageNumberPagination
@@ -9,7 +9,6 @@ from rest_framework.permissions import (IsAuthenticated,
                                         IsAuthenticatedOrReadOnly)
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.viewsets import ModelViewSet
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from reviews.models import Category, Genre, Review, Title, Comment
@@ -20,9 +19,10 @@ from api.serializers import (AuthSignUpSerializer, AuthTokenSerializer,
 from .filters import TitleFilter
 from .mixins import ListCreateDestroyViewSet
 from .permissions import (AdminModerAuthorOrReadOnly, AdminOrReadOnly,
-                          AdminOrSuperuser, AuthorOrAuthenticated)
+                          AdminOrSuperuser)
 from .serializers import (CommentSerializer, NotAdminSerializer,
                           ReviewSerializer, UserSerializer)
+from users.functions import create_confirmation_code
 
 
 class CategoryViewSet(ListCreateDestroyViewSet):
@@ -53,8 +53,7 @@ class TitleViewSet(viewsets.ModelViewSet):
     """
     Разрешены все методы.
 
-    Но права на изменения
-    только у Админа.
+    Но права на изменения только у Админа.
     """
 
     queryset = Title.objects.annotate(
@@ -78,6 +77,13 @@ class TitleViewSet(viewsets.ModelViewSet):
 
 
 class UserViewSet(viewsets.ModelViewSet):
+    """
+    Разрешены методы GET, PATCH, POST, DELETE.
+
+    Права только у администратора. Получение/изменение
+    данных своей учетной записи - авторизованный пользователь
+    """
+
     queryset = User.objects.all()
     lookup_field = 'username'
     serializer_class = UserSerializer
@@ -89,7 +95,7 @@ class UserViewSet(viewsets.ModelViewSet):
 
     @action(detail=False,
             methods=('get', 'patch'),
-            url_path=r'me',
+            url_path='me',
             permission_classes=(IsAuthenticated,))
     def get_current_user_info(self, request):
         serializer = UserSerializer(request.user)
@@ -114,23 +120,14 @@ class APIGetToken(APIView):
     """
     Получение JWT-токена в обмен на username и confirmation code.
 
-    Права доступа: Доступно без токена. Пример тела запроса:
-    {
-        "username": "string",
-        "confirmation_code": "string"
-    }
+    Права доступа: Доступно без токена.
     """
 
     def post(self, request):
         serializer = AuthTokenSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
-        try:
-            user = User.objects.get(username=data['username'])
-        except User.DoesNotExist:
-            return Response(
-                {'username': 'Пользователь не найден!'},
-                status=status.HTTP_404_NOT_FOUND)
+        user = get_object_or_404(User, username=data['username'])
         if data.get('confirmation_code') == user.confirmation_code:
             token = RefreshToken.for_user(user).access_token
             return Response({'token': str(token)},
@@ -145,18 +142,9 @@ class APISignup(APIView):
     Получить код подтверждения на переданный email.
 
     Права доступа: Доступно без токена.
-    Использовать имя 'me' в качестве username запрещено. Поля email и
-    username должны быть уникальными. Пример тела запроса:
-    {
-        "email": "string",
-        "username": "string"
-    }
     """
 
-    permission_classes = (permissions.AllowAny,)
-
-    @staticmethod
-    def send_email(data):
+    def send_email(self, data):
         email = EmailMessage(
             subject=data['email_subject'],
             body=data['email_body'],
@@ -167,10 +155,13 @@ class APISignup(APIView):
     def post(self, request):
         serializer = AuthSignUpSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        user = serializer.save()
+        email = serializer.validated_data['email']
+        username = serializer.validated_data['username']
+        user, _ = User.objects.get_or_create(email=email, username=username)
+        confirmation_code = create_confirmation_code()
         email_body = (
             f'Доброе время суток, {user.username}.'
-            f'\nКод подтверждения для доступа к API: {user.confirmation_code}'
+            f'\nКод подтверждения для доступа к API: {confirmation_code}'
         )
         data = {
             'email_body': email_body,
@@ -182,7 +173,18 @@ class APISignup(APIView):
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
-    permission_classes = [IsAuthenticatedOrReadOnly, AdminModerAuthorOrReadOnly]
+    """
+    Разрешенные методы GET, POST, PATCH, DELETE.
+
+    Права доступа: GET - Доступно без токена.
+    POST - Аутентифицированные пользователи
+    PATCH, DELETE - Автор, модер, админ
+    """
+
+    permission_classes = [
+        IsAuthenticatedOrReadOnly,
+        AdminModerAuthorOrReadOnly
+    ]
     pagination_class = PageNumberPagination
     filter_backends = [filters.SearchFilter]
     serializer_class = ReviewSerializer
@@ -198,8 +200,19 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
 
 class CommentViewSet(ReviewViewSet):
+    """
+    Разрешенные методы GET, POST, PATCH, DELETE.
+
+    Права доступа: GET - Доступно без токена.
+    POST - Аутентифицированные пользователи
+    PATCH, DELETE - Автор, модер, админ
+    """
+
     serializer_class = CommentSerializer
-    permission_classes = [IsAuthenticatedOrReadOnly, AdminModerAuthorOrReadOnly]
+    permission_classes = [
+        IsAuthenticatedOrReadOnly,
+        AdminModerAuthorOrReadOnly
+    ]
 
     def review_query(self):
         return get_object_or_404(Review, id=self.kwargs.get('review_id'))

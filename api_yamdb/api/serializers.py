@@ -1,8 +1,8 @@
 from datetime import date
 
-from rest_framework import filters, serializers, status
+from django.contrib.auth.models import AbstractUser
+from rest_framework import filters, serializers
 from rest_framework.relations import SlugRelatedField
-from rest_framework.response import Response
 
 from reviews.models import Category, Comment, Genre, Review, Title
 from users.models import User
@@ -51,12 +51,6 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ('username', 'email', 'first_name',
                   'last_name', 'bio', 'role',)
 
-    def validate(self, data):
-        if data.get('username') == 'me':
-            raise serializers.ValidationError(
-                'Username указан неверно!')
-        return data
-
 
 class NotAdminSerializer(serializers.ModelSerializer):
     class Meta:
@@ -67,11 +61,31 @@ class NotAdminSerializer(serializers.ModelSerializer):
         read_only_fields = ('role',)
 
 
-class AuthSignUpSerializer(serializers.ModelSerializer):
+class AuthSignUpSerializer(serializers.Serializer):
+    username = serializers.CharField(
+        max_length=150,
+        required=True,
+        validators=[AbstractUser.username_validator, ]
+    )
+    email = serializers.EmailField(max_length=254, required=True)
 
-    class Meta:
-        model = User
-        fields = ('email', 'username')
+    def validate(self, data):
+        username = data.get('username')
+        email = data.get('email')
+        if username == 'me':
+            raise serializers.ValidationError(
+                'Имя пользователя не может быть "me"!')
+        if (
+            User.objects.filter(username=username).exists()
+            and User.objects.get(username=username).email != email
+        ):
+            raise serializers.ValidationError(f'Поле {email} не совпадает!')
+        if (
+            User.objects.filter(email=email).exists()
+            and User.objects.get(email=email).username != username
+        ):
+            raise serializers.ValidationError(f'Поле {username} не совпадает!')
+        return data
 
 
 class AuthTokenSerializer(serializers.Serializer):
@@ -80,10 +94,7 @@ class AuthTokenSerializer(serializers.Serializer):
 
     class Meta:
         model = User
-        fields = (
-            'username',
-            'confirmation_code'
-        )
+        fields = ('username', 'confirmation_code')
 
 
 class ReviewSerializer(serializers.ModelSerializer):
@@ -94,12 +105,12 @@ class ReviewSerializer(serializers.ModelSerializer):
         model = Review
 
     def validate(self, data):
-        request = self.context['request']
+        request = self.context.get('request')
         title_id = self.context.get('view').kwargs.get('title_id')
         if request.stream.method == 'POST':
             if Review.objects.filter(
-                title=title_id,
-                author=request.user
+                    title=title_id,
+                    author=request.user
             ).exists():
                 raise serializers.ValidationError(
                     'Можно оставить только один отзыв!'
@@ -108,9 +119,7 @@ class ReviewSerializer(serializers.ModelSerializer):
 
 
 class CommentSerializer(serializers.ModelSerializer):
-    author = SlugRelatedField(
-        read_only=True, slug_field='username'
-    )
+    author = SlugRelatedField(read_only=True, slug_field='username')
 
     class Meta:
         model = Comment

@@ -64,19 +64,9 @@ class GenreTitle(models.Model):
         return f'{self.title} {self.genre}'
 
 
-class ParentingModel(models.Model):
-    text = models.TextField()
-    author = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-    )
-    pub_date = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        abstract = True
-
-
 class Review(models.Model):
+    """Отзывы."""
+
     text = models.TextField()
     pub_date = models.DateTimeField('Дата публикации', auto_now_add=True)
     author = models.ForeignKey(
@@ -103,11 +93,10 @@ class Review(models.Model):
     def __str__(self):
         return f'{self.text}, {self.score}'
 
-    def __repr__(self):
-        return self.text[:100]
-
 
 class Comment(models.Model):
+    """Комментарии."""
+
     author = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name='comments')
     review = models.ForeignKey(
