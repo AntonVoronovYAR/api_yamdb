@@ -144,7 +144,8 @@ class APISignup(APIView):
     Права доступа: Доступно без токена.
     """
 
-    def send_email(self, data):
+    @staticmethod
+    def send_email(data):
         email = EmailMessage(
             subject=data['email_subject'],
             body=data['email_body'],
@@ -168,7 +169,7 @@ class APISignup(APIView):
             'to_email': user.email,
             'email_subject': 'Код подтверждения для доступа к API!'
         }
-        self.send_email(data)
+        APISignup.send_email(data)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 

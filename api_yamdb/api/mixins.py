@@ -7,6 +7,12 @@ class ListCreateDestroyViewSet(
     mixins.DestroyModelMixin,
     viewsets.GenericViewSet
 ):
+    """
+    Миксин для вьюсетов Category и Genre.
+
+    Разрешенные методы GET, PUT, DELETE.
+    """
+
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
     lookup_field = 'slug'
