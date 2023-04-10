@@ -23,7 +23,7 @@ class User(AbstractUser):
     email = models.EmailField(
         'Электронная почта',
         max_length=254,
-        unique=True
+        unique=True,
     )
     confirmation_code = models.CharField(
         'Код подтверждения',

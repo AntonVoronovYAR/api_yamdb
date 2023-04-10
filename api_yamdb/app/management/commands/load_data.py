@@ -18,7 +18,8 @@ FILE_DATA_TO_MODEL: dict = {
 
 class Command(BaseCommand):
 
-    def write_data_to_model(self, file, model):
+    @staticmethod
+    def write_data_to_model(file, model):
         """
         Запись файла в соответствующую модель.
 

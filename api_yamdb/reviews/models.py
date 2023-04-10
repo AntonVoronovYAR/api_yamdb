@@ -2,7 +2,7 @@ from django.contrib.auth import get_user_model
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
-MAX_TEXT_LEN: int = 25
+from .const import MAX_TEXT_LEN
 
 User = get_user_model()
 
@@ -13,11 +13,11 @@ class Category(models.Model):
     name = models.CharField(max_length=256, help_text='Наименование')
     slug = models.SlugField(max_length=50, help_text='Тип', unique=True)
 
-    def __str__(self):
-        return self.name[:MAX_TEXT_LEN]
-
     class Meta:
         ordering = ['id']
+
+    def __str__(self):
+        return self.name[:MAX_TEXT_LEN]
 
 
 class Genre(models.Model):
@@ -26,18 +26,22 @@ class Genre(models.Model):
     name = models.CharField(max_length=256, help_text='Наименование')
     slug = models.SlugField(max_length=50, help_text='Тип', unique=True)
 
-    def __str__(self):
-        return self.name[:MAX_TEXT_LEN]
-
     class Meta:
         ordering = ['id']
+
+    def __str__(self):
+        return self.name[:MAX_TEXT_LEN]
 
 
 class Title(models.Model):
     """Произведения."""
 
-    name = models.CharField(max_length=256, help_text='Название')
-    year = models.IntegerField(help_text='Год выпуска')
+    name = models.CharField(
+        max_length=256,
+        help_text='Название',
+        db_index=True
+    )
+    year = models.IntegerField(help_text='Год выпуска', db_index=True)
     description = models.TextField(help_text='Описание', blank=True)
     genre = models.ManyToManyField(Genre, through='GenreTitle')
     category = models.ForeignKey(
@@ -68,7 +72,11 @@ class Review(models.Model):
     """Отзывы."""
 
     text = models.TextField()
-    pub_date = models.DateTimeField('Дата публикации', auto_now_add=True)
+    pub_date = models.DateTimeField(
+        'Дата публикации',
+        auto_now_add=True,
+        db_index=True
+    )
     author = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name='reviews')
     title = models.ForeignKey(
@@ -79,7 +87,8 @@ class Review(models.Model):
         validators=[
             MaxValueValidator(10),
             MinValueValidator(1)
-        ]
+        ],
+        db_index=True
     )
 
     class Meta:

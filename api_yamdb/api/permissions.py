@@ -5,16 +5,14 @@ class AdminOrReadOnly(permissions.BasePermission):
     """Доступ на запись админу и суперюзеру, остальным read-only."""
 
     def has_permission(self, request, view):
-        if request.method in permissions.SAFE_METHODS:
-            return True
-        else:
-            if request.user.is_authenticated:
-                if request.user.is_admin:
-                    return True
+        return (
+            request.method in permissions.SAFE_METHODS
+            or request.user.is_authenticated and request.user.is_admin
+        )
 
 
 class AdminModerAuthorOrReadOnly(permissions.BasePermission):
-    """Доступ автору, модератору, админу и суперюзеру"""
+    """Доступ автору, модератору, админу и суперюзеру."""
 
     def has_object_permission(self, request, view, obj):
         if request.method in permissions.SAFE_METHODS:
