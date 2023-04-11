@@ -1,5 +1,6 @@
 from datetime import date
 
+from django.db.models import Q
 from django.contrib.auth.models import AbstractUser
 from rest_framework import filters, serializers
 from rest_framework.relations import SlugRelatedField
@@ -69,30 +70,20 @@ class AuthSignUpSerializer(serializers.Serializer):
     )
     email = serializers.EmailField(max_length=254, required=True)
 
-    # Комментарий для ревьювера. Артем, не до конца понял как тут надо
-    # выносить в переменную. Ведь у меня используется 2 разных метода:
-    # в одном случае использую
-    # filter (с username и email), в другом get(c username и email)
-    # в итоге пришлось поменять get на filter, получилось вот так
-    # Также ознакомился с Q объектами, смысл понятен: в одном filter используем
-    # при необходимости несколько условий AND, OR, NOT.
-    # Но методы exists() и first()
-    # в данном случае не поддерживаются, направь, пожалуйста,
-    # что не так делаю?:
-    # user(Q(username=username).exists() |
-    # Q(username=username).first().email != email):
     def validate(self, data):
         username = data.get('username')
         email = data.get('email')
-        user_username = User.objects.filter(username=username)
-        user_email = User.objects.filter(email=email)
+        user = User.objects.filter(Q(username=username) | Q(email=email))
         if username == 'me':
             raise serializers.ValidationError(
                 'Имя пользователя не может быть "me"!')
-        if user_username.exists() and user_username.first().email != email:
-            raise serializers.ValidationError(f'Поле {email} не совпадает!')
-        if user_email.exists() and user_email.first().username != username:
-            raise serializers.ValidationError(f'Поле {username} не совпадает!')
+        if user.exists():
+            if user.first().email != email:
+                raise serializers.ValidationError(
+                    f'Поле {email} не совпадает!')
+            if user.first().username != username:
+                raise serializers.ValidationError(
+                    f'Поле {username} не совпадает!')
         return data
 
 
